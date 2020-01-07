@@ -6,18 +6,25 @@ import axios from 'axios'
 import marked from 'marked'
 import hljs from 'highlight.js';
 import 'highlight.js/styles/monokai-sublime.css';
-import MarkNav from 'markdown-navbar';
-import 'markdown-navbar/dist/navbar.css';
 
 import Header from '../components/Header'
 import Author from '../components/Author'
 import Advert from '../components/Advert'
 import Footer from '../components/Footer'
+import Tocify from '../components/tocify.tsx';
 import '../public/style/pages/detailed.css'
+
+import servicePath from '../config/apiURL'
 
 const Detailed = (props) => {
 
+  const tocify = new Tocify()
   const renderer = new marked.Renderer()
+
+  renderer.heading = function (text, level, raw) {
+    const anchor = tocify.add(text, level)
+    return `<a id="${anchor}" href="#${anchor}" class="anchor-fix"><h${level}>${text}</h${level}></a>/n`
+  }
 
   marked.setOptions({
     renderer: renderer,
@@ -79,11 +86,7 @@ const Detailed = (props) => {
           <Affix>
             <div className="detailed-nav comm-box">
               <div className="nav-title">文章目录</div>
-              <MarkNav
-                className="article-menu"
-                source={html}
-                ordered={false}
-              />
+              {tocify && tocify.render()}
             </div>
           </Affix>
         </Col>
@@ -97,7 +100,7 @@ Detailed.getInitialProps = async (context) => {
   console.log(context.query.id)
   let id = context.query.id
   const promise = new Promise((resolve) => {
-    axios('http://127.0.0.1:7001/default/getArticleById/'+id).then(
+    axios(servicePath.getArticleById+id).then(
       (res) => {
         console.log(res)
         resolve(res.data.data[0])
